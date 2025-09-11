@@ -1,3 +1,6 @@
+# Copyright (c) 2025 BobbyUnknown
+# Licensed under the MIT License.
+
 name: Build luci-app-webdroidx
 
 on:
@@ -100,13 +103,11 @@ jobs:
           echo "=== Files in artifacts directory ==="
           find ./artifacts -name "*luci-app-webdroidx*" -type f | sort
           
-          # Upload files from each artifact directory with proper naming
           for artifact_dir in ./artifacts/*/; do
             if [ -d "$artifact_dir" ]; then
               dir_name=$(basename "$artifact_dir")
               echo "=== Processing: $dir_name ==="
               
-              # Determine suffix based on directory name
               if [[ "$dir_name" == *"master"* ]]; then
                 suffix="snapshot"
               elif [[ "$dir_name" == *"23.05.5"* ]]; then
@@ -115,12 +116,17 @@ jobs:
                 suffix="unknown"
               fi
               
-              # Upload all files with suffix
               find "$artifact_dir" -name "*luci-app-webdroidx*" -type f | while read file; do
                 filename=$(basename "$file")
-                new_name="${filename%.*}-${suffix}.${filename##*.}"
-                echo "Uploading: $file as $new_name"
-                # Copy file with new name and upload
+                
+                if [[ "$filename" == *.ipk ]]; then
+                  new_name="$filename"
+                  echo "Uploading: $file as $new_name (original .ipk name)"
+                else
+                  new_name="${filename%.*}-${suffix}.${filename##*.}"
+                  echo "Uploading: $file as $new_name (with suffix)"
+                fi
+                
                 cp "$file" "$new_name"
                 gh release upload ${{ steps.get_info.outputs.version }} "$new_name" --clobber
                 rm "$new_name"
