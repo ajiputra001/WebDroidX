@@ -1,0 +1,31 @@
+{
+    "luci-app-webdroidx": {
+        "description": "Grant access to webdroidx configuration and ADB commands",
+        "read": {
+            "ubus": {
+                "service": [ "list" ],
+                "file": [ "read" ]
+            },
+            "uci": [ "webdroidx" ],
+            "file": {
+                "/var/log/webdroidx/webdroidx.log": [ "read" ],
+                "/usr/bin/adb": [ "exec" ],
+                "/etc/init.d/webdroidx": [ "exec" ],
+                "/sbin/uci": [ "exec" ]
+            }
+        },
+        "write": {
+            "ubus": {
+                "service": [ "event", "start", "stop" ],
+                "file": [ "write", "exec" ]
+            },
+            "uci": [ "webdroidx" ],
+            "file": {
+                "/var/log/webdroidx/webdroidx.log": [ "write" ],
+                "/usr/bin/adb": [ "exec" ],
+                "/etc/init.d/webdroidx": [ "exec" ],
+                "/sbin/uci": [ "exec" ]
+            }
+        }
+    }
+}
