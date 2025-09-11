@@ -96,7 +96,32 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Upload all files one by one
-          find ./artifacts -name "*luci-app-webdroidx*.ipk" -type f -exec gh release upload ${{ steps.get_info.outputs.version }} {} --clobber \;
-          find ./artifacts -name "*luci-app-webdroidx*.apk" -type f -exec gh release upload ${{ steps.get_info.outputs.version }} {} --clobber \;
+          # List all files for debugging
+          echo "=== Files in artifacts directory ==="
+          find ./artifacts -name "*luci-app-webdroidx*" -type f | sort
+          
+          # Upload files from each artifact directory with proper naming
+          for artifact_dir in ./artifacts/*/; do
+            if [ -d "$artifact_dir" ]; then
+              dir_name=$(basename "$artifact_dir")
+              echo "=== Processing: $dir_name ==="
+              
+              # Determine suffix based on directory name
+              if [[ "$dir_name" == *"master"* ]]; then
+                suffix="snapshot"
+              elif [[ "$dir_name" == *"23.05.5"* ]]; then
+                suffix="23.05.5"
+              else
+                suffix="unknown"
+              fi
+              
+              # Upload all files with suffix
+              find "$artifact_dir" -name "*luci-app-webdroidx*" -type f | while read file; do
+                filename=$(basename "$file")
+                new_name="${filename%.*}-${suffix}.${filename##*.}"
+                echo "Uploading: $file as $new_name"
+                gh release upload ${{ steps.get_info.outputs.version }} "$file" --clobber --name "$new_name"
+              done
+            fi
+          done
 
