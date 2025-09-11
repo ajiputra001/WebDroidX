@@ -21,11 +21,11 @@ jobs:
         
       - name: Build packages
         uses: openwrt/gh-action-sdk@main
-        with:
-          arch: ${{ matrix.arch }}-${{ matrix.release }}
-          packages: luci-app-webdroidx
-          index: false
-          no_refresh_check: true
+        env:
+          ARCH: ${{ matrix.arch }}-${{ matrix.release }}
+          PACKAGES: luci-app-webdroidx
+          INDEX: 0
+          NO_REFRESH_CHECK: 1
           
       - name: Find package files
         run: |
