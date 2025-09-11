@@ -40,16 +40,16 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
-	$(INSTALL_DATA) ./root/usr/share/luci/menu.d/* $(1)/usr/share/luci/menu.d/
+	$(INSTALL_DATA) ./usr/share/luci/menu.d/* $(1)/usr/share/luci/menu.d/
 
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/* $(1)/usr/share/rpcd/acl.d/
+	$(INSTALL_DATA) ./usr/share/rpcd/acl.d/* $(1)/usr/share/rpcd/acl.d/
 
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./root/etc/init.d/webdroidx $(1)/etc/init.d/webdroidx
+	$(INSTALL_BIN) ./etc/init.d/webdroidx $(1)/etc/init.d/webdroidx
 
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) ./root/etc/config/webdroidx $(1)/etc/config/webdroidx
+	$(INSTALL_CONF) ./etc/config/webdroidx $(1)/etc/config/webdroidx
 
 	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/webdroidx
 	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/webdroidx/* $(1)/www/luci-static/resources/view/webdroidx/
