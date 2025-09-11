@@ -13,8 +13,6 @@ jobs:
         release:
           - master
           - 23.05.5
-        arch:
-          - x86_64
 
     steps:
       - name: Checkout
@@ -23,29 +21,66 @@ jobs:
       - name: Build packages
         uses: openwrt/gh-action-sdk@main
         with:
-          arch: ${{ matrix.arch }}-${{ matrix.release }}
+          arch: x86_64
+          release: ${{ matrix.release }}
           packages: luci-app-webdroidx
           index: false
           no_refresh_check: true
 
-      - name: Find package files
-        run: |
-          find . -name "*luci-app-webdroidx*.ipk" -type f
-          find . -name "*luci-app-webdroidx*.apk" -type f
-
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: luci-app-webdroidx-${{ matrix.arch }}-${{ matrix.release }}
-          path: |
-            **/*luci-app-webdroidx*.ipk
-            **/*luci-app-webdroidx*.apk
+          name: luci-app-webdroidx-${{ matrix.release }}
+          path: "**/*luci-app-webdroidx*.ipk"
           if-no-files-found: error
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Get package info
+        id: get_info
+        run: |
+          PKG_NAME="luci-app-webdroidx"
+          PKG_VERSION="1.0.$(date +'%y%m%d')"
+          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          files: |
-            **/*luci-app-webdroidx*.ipk
-            **/*luci-app-webdroidx*.apk
+          path: ./artifacts
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_date=$(date +'%y%m%d')
+          release_name="${{ steps.get_info.outputs.PKG_NAME }}-${release_date}"
+          release_tag="${{ steps.get_info.outputs.version }}"
+          release_body="# 🚀 ${{ steps.get_info.outputs.PKG_NAME }} for OpenWRT
+          ## 📦 Release Version: \`${{ steps.get_info.outputs.version }}\`
+          ### 🌟 Features:
+            - WebDroidX functionality for OpenWRT
+            - LuCI web interface integration
+            - Easy installation and configuration
+          > 🔔 Always ensure you're using the latest version for the best performance!"
+          
+          if gh release view "$release_tag" >/dev/null 2>&1; then
+            echo "Release $release_tag already exists"
+          else
+            gh release create "$release_tag" \
+              --title "$release_name" \
+              --notes "$release_body"
+          fi
+
+      - name: Upload packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for ipk_file in $(find ./artifacts -name "*.ipk" -type f); do
+            gh release upload ${{ steps.get_info.outputs.version }} "$ipk_file" --clobber
+          done
