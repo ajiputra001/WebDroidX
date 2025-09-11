@@ -6,7 +6,7 @@ PKG_RELEASE:=1
 
 PKG_MAINTAINER:=BobbyUnknown <bobbyun.known88@gmail.com>
 
-LUCI_TITLE:=LuCI networking tools
+LUCI_TITLE:=WebDroidX - Android Screen Mirroring
 LUCI_DEPENDS:=+adb +screen
 LUCI_PKGARCH:=all
 
