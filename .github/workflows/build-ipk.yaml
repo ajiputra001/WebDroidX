@@ -17,26 +17,35 @@ jobs:
           - x86_64
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Build packages
-      uses: openwrt/gh-action-sdk@main
-      with:
-        arch: ${{ matrix.arch }}-${{ matrix.release }}
-        packages: luci-app-webdroidx
-        index: false
-        no_refresh_check: true
+      - name: Build packages
+        uses: openwrt/gh-action-sdk@main
+        with:
+          arch: ${{ matrix.arch }}-${{ matrix.release }}
+          packages: luci-app-webdroidx
+          index: false
+          no_refresh_check: true
 
-    - name: Archive build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: luci-app-webdroidx-${{ matrix.arch }}-${{ matrix.release }}
-        path: bin/packages/*/base/luci-app-webdroidx*.ipk
-        if-no-files-found: error
+      - name: Find package files
+        run: |
+          find . -name "*luci-app-webdroidx*.ipk" -type f
+          find . -name "*luci-app-webdroidx*.apk" -type f
 
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: bin/packages/*/base/luci-app-webdroidx*.ipk
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-app-webdroidx-${{ matrix.arch }}-${{ matrix.release }}
+          path: |
+            **/*luci-app-webdroidx*.ipk
+            **/*luci-app-webdroidx*.apk
+          if-no-files-found: error
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            **/*luci-app-webdroidx*.ipk
+            **/*luci-app-webdroidx*.apk
