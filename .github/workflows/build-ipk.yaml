@@ -29,16 +29,14 @@ jobs:
           
       - name: Find package files
         run: |
-          find . -name "*luci-app-webdroidx*.ipk" -type f
-          find . -name "*luci-app-webdroidx*.apk" -type f
+          find . -name "luci-app-webdroidx_*_all.ipk" -type f
           
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: luci-app-webdroidx-${{ matrix.arch }}-${{ matrix.release }}
           path: |
-            **/*luci-app-webdroidx*.ipk
-            **/*luci-app-webdroidx*.apk
+            **/luci-app-webdroidx_*_all.ipk
           if-no-files-found: error
 
   release:
@@ -53,8 +51,13 @@ jobs:
       - name: Get package info
         id: get_info
         run: |
-          PKG_VERSION="1.0.$(date +'%y%m%d')"
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          # Extract version from Makefile
+          PKG_VERSION=$(grep "^PKG_VERSION:=" luci-app-webdroidx/Makefile | cut -d'=' -f2)
+          PKG_RELEASE=$(grep "^PKG_RELEASE:=" luci-app-webdroidx/Makefile | cut -d'=' -f2)
+          FULL_VERSION="${PKG_VERSION}-${PKG_RELEASE}"
+          echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "pkg_version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          echo "pkg_release=$PKG_RELEASE" >> $GITHUB_OUTPUT
           
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -71,13 +74,19 @@ jobs:
           ## 📦 Release Version: \`${{ steps.get_info.outputs.version }}\`
           
           ### 🌟 Features:
-          - WebDroidX functionality for OpenWRT
-          - LuCI web interface integration
-          - Easy installation and configuration"
+          - Web-based Android screen mirroring solution
+          - Control and view Android devices through web browser
+          - LuCI web interface integration for OpenWRT
+          - Easy installation and configuration
+          
+          ### 📋 Package Details:
+          - Version: ${{ steps.get_info.outputs.pkg_version }}
+          - Release: ${{ steps.get_info.outputs.pkg_release }}
+          - Architecture: all"
           
           if ! gh release view "$release_tag" >/dev/null 2>&1; then
             gh release create "$release_tag" \
-              --title "luci-app-webdroidx-$(date +'%y%m%d')" \
+              --title "luci-app-webdroidx v${{ steps.get_info.outputs.version }}" \
               --notes "$release_body"
           fi
           
@@ -85,6 +94,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for pkg_file in $(find ./artifacts -name "*.ipk" -o -name "*.apk" -type f); do
-            gh release upload ${{ steps.get_info.outputs.version }} "$pkg_file" --clobber
-          done
+          # Upload all files one by one
+          find ./artifacts -name "luci-app-webdroidx_*_all.ipk" -type f -exec gh release upload ${{ steps.get_info.outputs.version }} {} --clobber \;
+
