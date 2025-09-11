@@ -120,7 +120,10 @@ jobs:
                 filename=$(basename "$file")
                 new_name="${filename%.*}-${suffix}.${filename##*.}"
                 echo "Uploading: $file as $new_name"
-                gh release upload ${{ steps.get_info.outputs.version }} "$file" --clobber --name "$new_name"
+                # Copy file with new name and upload
+                cp "$file" "$new_name"
+                gh release upload ${{ steps.get_info.outputs.version }} "$new_name" --clobber
+                rm "$new_name"
               done
             fi
           done
